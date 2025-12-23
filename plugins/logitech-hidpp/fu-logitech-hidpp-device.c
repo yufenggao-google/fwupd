@@ -140,7 +140,7 @@ fu_logitech_hidpp_device_get_summary(FuLogitechHidppDeviceKind kind)
 }
 
 static gboolean
-fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
+fu_logitech_hidpp_device_ping_real(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
@@ -341,7 +341,7 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError **error)
+fu_logitech_hidpp_device_fetch_firmware_info_real(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
@@ -438,7 +438,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 }
 
 static gboolean
-fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **error)
+fu_logitech_hidpp_device_fetch_model_id_real(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
@@ -1967,11 +1967,54 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
+{
+	FuLogitechHidppDeviceClass *klass;
+
+	g_return_val_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self), FALSE);
+
+	klass = FU_LOGITECH_HIDPP_DEVICE_GET_CLASS(self);
+	g_return_val_if_fail(klass->ping, FALSE);
+
+	return klass->ping(self, error);
+}
+
+static gboolean
+fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **error)
+{
+	FuLogitechHidppDeviceClass *klass;
+
+	g_return_val_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self), FALSE);
+
+	klass = FU_LOGITECH_HIDPP_DEVICE_GET_CLASS(self);
+	g_return_val_if_fail(klass->fetch_model_id, FALSE);
+
+	return klass->fetch_model_id(self, error);
+}
+
+static gboolean
+fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError **error)
+{
+	FuLogitechHidppDeviceClass *klass;
+
+	g_return_val_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self), FALSE);
+
+	klass = FU_LOGITECH_HIDPP_DEVICE_GET_CLASS(self);
+	g_return_val_if_fail(klass->fetch_firmware_info, FALSE);
+
+	return klass->fetch_firmware_info(self, error);
+}
+
 static void
 fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+	klass->ping = fu_logitech_hidpp_device_ping_real;
+	klass->fetch_model_id = fu_logitech_hidpp_device_fetch_model_id_real;
+	klass->fetch_firmware_info = fu_logitech_hidpp_device_fetch_firmware_info_real;
 
 	object_class->finalize = fu_logitech_hidpp_device_finalize;
 	device_class->setup = fu_logitech_hidpp_device_setup;
