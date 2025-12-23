@@ -17,7 +17,10 @@ G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppDevice,
 
 struct _FuLogitechHidppDeviceClass {
 	FuUdevDeviceClass parent_class;
-	/* TODO: overridable methods */
+
+	gboolean (*ping)(FuLogitechHidppDevice *self, GError **error);
+	gboolean (*fetch_model_id)(FuLogitechHidppDevice *self, GError **error);
+	gboolean (*fetch_firmware_info)(FuLogitechHidppDevice *self, GError **error);
 };
 
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID	  "force-receiver-id"
