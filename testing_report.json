@@ -1,0 +1,80 @@
+[
+  {
+    "title": "Missing tests for AMD GPU ATOM firmware parsing",
+    "description": "The AMD GPU plugin lacks unit tests for the FuAmdGpuAtomFirmware class, which handles complex binary firmware parsing.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/plugins/amd-gpu/fu-amd-gpu-atom-firmware.c#L1",
+    "filePath": "plugins/amd-gpu/fu-amd-gpu-atom-firmware.c",
+    "lineNumber": 1,
+    "confidence": 2,
+    "rationale": "The fu-amd-gpu-atom-firmware.c file contains logic to parse VBIOS structures. This logic is self-contained and suitable for unit testing, but requires creating a fu-self-test.c and potentially a test fixture.",
+    "context": "/*\n * Copyright 2023 Advanced Micro Devices Inc.\n * All rights reserved.\n *\n * This file is provided under a dual MIT/LGPLv2 license.  When using or\n * redistributing this file, you may do so under either license.\n * AMD Chooses the MIT license part of Dual MIT/LGPLv2 license agreement.\n *\n * SPDX-License-Identifier: LGPL-2.1-or-later OR MIT\n */",
+    "language": "c",
+    "category": "missing-test-file",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Untested checksum guessing logic",
+    "description": "The fwupd_checksum_guess_kind function, which determines checksum type by length, is not explicitly tested.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupd/fwupd-common.c#L37",
+    "filePath": "libfwupd/fwupd-common.c",
+    "lineNumber": 37,
+    "confidence": 1,
+    "rationale": "The function has clear input/output behavior (string length -> enum) and is trivial to test in fwupd-self-test.c.",
+    "context": "GChecksumType\nfwupd_checksum_guess_kind(const gchar *checksum)\n{\n\tguint len;\n\tg_return_val_if_fail(checksum != NULL, G_CHECKSUM_SHA1);\n\tlen = strlen(checksum);\n\tif (len == 32)\n\t\treturn G_CHECKSUM_MD5;\n\tif (len == 40)\n\t\treturn G_CHECKSUM_SHA1;\n\tif (len == 64)",
+    "language": "c",
+    "category": "untested-function",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Untested user agent generation",
+    "description": "The fwupd_client_get_user_agent function and its underlying generation logic are not verified for correct formatting.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupd/fwupd-client.c#L5687",
+    "filePath": "libfwupd/fwupd-client.c",
+    "lineNumber": 5687,
+    "confidence": 2,
+    "rationale": "While the client is tested, the specific format of the user agent string (containing OS, version, etc.) is not asserted. Can be tested in fwupd-self-test.c.",
+    "context": "const gchar *\nfwupd_client_get_user_agent(FwupdClient *self)\n{\n\tFwupdClientPrivate *priv = GET_PRIVATE(self);\n\tg_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);\n\treturn priv->user_agent;\n}\n\n/**",
+    "language": "c",
+    "category": "untested-function",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Flaky random sleep in thread tests",
+    "description": "The test uses g_usleep with a random duration, which introduces non-determinism and potential flakiness.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupd/fwupd-thread-test.c#L57",
+    "filePath": "libfwupd/fwupd-thread-test.c",
+    "lineNumber": 57,
+    "confidence": 2,
+    "rationale": "Random sleeps are unreliable for synchronization. Synchronization primitives should be used to ensure deterministic test execution.",
+    "context": "\tfor (guint i = 0; i < 30; i++) {\n\t\tg_autofree gchar *thread_str = g_strdup_printf(\"worker%02u\", i);\n\t\tGThread *thread = g_thread_new(thread_str, fwupd_thread_test_thread_cb, self);\n\t\tg_usleep(g_random_int_range(0, 1000)); /* nocheck:blocked */\n\t\tg_ptr_array_add(self->worker_threads, thread);\n\t\tif (i > 0)\n\t\t\tg_application_hold(self->app);\n\t}",
+    "language": "c",
+    "category": "flaky-test",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Missing error handling test for GUID hashing",
+    "description": "fwupd_guid_hash_data checks for NULL input using g_return_val_if_fail, but this error path is not covered by tests.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupd/fwupd-common.c#L306",
+    "filePath": "libfwupd/fwupd-common.c",
+    "lineNumber": 306,
+    "confidence": 1,
+    "rationale": "Easy to add g_assert_null(fwupd_guid_hash_data(NULL, ...)) in fwupd-self-test.c to ensure the safety check works as expected.",
+    "context": "gchar *\nfwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags)\n{\n\tgsize digestlen = 20;\n\tguint8 hash[20] = {0};\n\tfwupd_guid_t uu_new;\n\tg_autoptr(GChecksum) csum = NULL;\n\tconst fwupd_guid_t uu_default = {0x6b,",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Missing tests for Android Boot device",
+    "description": "The Android Boot plugin lacks unit tests for the FuAndroidBootDevice class.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/plugins/android-boot/fu-android-boot-device.c#L1",
+    "filePath": "plugins/android-boot/fu-android-boot-device.c",
+    "lineNumber": 1,
+    "confidence": 2,
+    "rationale": "The device logic should be tested to ensure it correctly interacts with the Android boot protocol, possibly using mocks for udev and file I/O.",
+    "context": "/*\n * Copyright 2022 Dylan Van Assche <me@dylanvanassche.be>\n *\n * SPDX-License-Identifier: LGPL-2.1-or-later\n */\n\n#include \"config.h\"\n\n#include <fcntl.h>",
+    "language": "c",
+    "category": "missing-test-file",
+    "estimatedImpact": 2
+  }
+]
