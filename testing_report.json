@@ -1,0 +1,80 @@
+[
+  {
+    "title": "Test fu_efi_signature_parse invalid size check",
+    "description": "Ensure fu_efi_signature_parse fails gracefully when the firmware size is too small (<= GUID size).",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-efi-signature.c#L124",
+    "filePath": "libfwupdplugin/fu-efi-signature.c",
+    "lineNumber": 124,
+    "confidence": 1,
+    "rationale": "It is straightforward to create a GInputStream smaller than sizeof(fwupd_guid_t) and assert that the function returns FALSE with the expected error.",
+    "context": "\t/* sanity check */\n\tif (size <= sizeof(fwupd_guid_t)) {\n\t\tg_set_error(error,\n\t\t\t    FWUPD_ERROR,\n\t\t\t    FWUPD_ERROR_INVALID_DATA,\n\t\t\t    \"SignatureSize invalid: 0x%x\",\n\t\t\t    (guint)size);\n\t\treturn FALSE;\n\t}",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 1
+  },
+  {
+    "title": "Test fu_efi_signature_build invalid kind check",
+    "description": "Verify that building an EFI signature from XML with an invalid kind attribute returns an error.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-efi-signature.c#L202",
+    "filePath": "libfwupdplugin/fu-efi-signature.c",
+    "lineNumber": 202,
+    "confidence": 1,
+    "rationale": "Easily testable by passing an XML node with an invalid 'kind' attribute to fu_efi_signature_build and checking for the error.",
+    "context": "\tif (tmp != NULL) {\n\t\tpriv->kind = fu_efi_signature_kind_from_string(tmp);\n\t\tif (priv->kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {\n\t\t\tg_set_error(error,\n\t\t\t\t    FWUPD_ERROR,\n\t\t\t\t    FWUPD_ERROR_INVALID_DATA,\n\t\t\t\t    \"invalid kind: %s\",\n\t\t\t\t    tmp);\n\t\t\treturn FALSE;\n\t\t}\n\t}",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Test fu_elf_firmware_parse shstrndx validation",
+    "description": "Ensure parsing fails if the section index pointed to by shstrndx is not of type STRTAB.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-elf-firmware.c#L94",
+    "filePath": "libfwupdplugin/fu-elf-firmware.c",
+    "lineNumber": 94,
+    "confidence": 2,
+    "rationale": "Requires constructing a valid ELF header but with shstrndx pointing to a non-STRTAB section, then verifying the parse failure.",
+    "context": "\t\t/* catch the strtab */\n\t\tif (i == fu_struct_elf_file_header64le_get_shstrndx(st_fhdr)) {\n\t\t\tif (fu_struct_elf_section_header64le_get_type(st_shdr) !=\n\t\t\t    FU_ELF_SECTION_HEADER_TYPE_STRTAB) {\n\t\t\t\tg_set_error(\n\t\t\t\t    error,\n\t\t\t\t    FWUPD_ERROR,\n\t\t\t\t    FWUPD_ERROR_INVALID_DATA,\n\t\t\t\t    \"shstrndx section type was not strtab, was %s\",\n\t\t\t\t    fu_elf_section_header_type_to_string(\n\t\t\t\t\tfu_struct_elf_section_header64le_get_type(st_shdr)));\n\t\t\t\treturn FALSE;\n\t\t\t}",
+    "language": "c",
+    "category": "missing-edge-case",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Test fu_elf_firmware_write missing image ID check",
+    "description": "Test that writing ELF firmware fails if any image (section) is missing an ID.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-elf-firmware.c#L254",
+    "filePath": "libfwupdplugin/fu-elf-firmware.c",
+    "lineNumber": 254,
+    "confidence": 1,
+    "rationale": "Can be tested by creating a new FuElfFirmware, adding a generic FuFirmware image without setting its ID, and asserting that write() fails.",
+    "context": "\tfor (guint i = 0; i < imgs->len; i++) {\n\t\tFuFirmware *img = g_ptr_array_index(imgs, i);\n\t\tif (fu_firmware_get_id(img) == NULL) {\n\t\t\tg_set_error(error,\n\t\t\t\t    FWUPD_ERROR,\n\t\t\t\t    FWUPD_ERROR_INVALID_DATA,\n\t\t\t\t    \"section 0x%x must have an ID\",\n\t\t\t\t    (guint)fu_firmware_get_idx(img));\n\t\t\treturn NULL;\n\t\t}\n\t\tfu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img));\n\t}",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Test fu_efi_signature_parse invalid stream read",
+    "description": "Ensure fu_efi_signature_parse handles read errors from the input stream.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-efi-signature.c#L134",
+    "filePath": "libfwupdplugin/fu-efi-signature.c",
+    "lineNumber": 134,
+    "confidence": 2,
+    "rationale": "Requires mocking an input stream that fails on read or provides incomplete data after the size check passed.",
+    "context": "\t/* GUID */\n\tif (!fu_input_stream_read_safe(stream,\n\t\t\t\t       (guint8 *)&guid,\n\t\t\t\t       sizeof(guid),\n\t\t\t\t       0x0, /* seek to */\n\t\t\t\t       0x0, /* offset */\n\t\t\t\t       sizeof(guid),\n\t\t\t\t       error)) {\n\t\tg_prefix_error_literal(error, \"failed to read signature GUID: \");\n\t\treturn FALSE;\n\t}",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Test fu_efivars_get_boot_next invalid size check",
+    "description": "Ensure fu_efivars_get_boot_next returns an error if the underlying variable has an invalid size.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/libfwupdplugin/fu-efivars.c#L679",
+    "filePath": "libfwupdplugin/fu-efivars.c",
+    "lineNumber": 679,
+    "confidence": 2,
+    "rationale": "Using the fu_dummy_efivars backend, one can set the BootNext variable to a single byte and verify that get_boot_next returns the expected error.",
+    "context": "\tif (!fu_efivars_get_data(self,\n\t\t\t\t FU_EFIVARS_GUID_EFI_GLOBAL,\n\t\t\t\t \"BootNext\",\n\t\t\t\t &buf,\n\t\t\t\t &bufsz,\n\t\t\t\t NULL,\n\t\t\t\t error))\n\t\treturn FALSE;\n\tif (bufsz != sizeof(guint16)) {\n\t\tg_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, \"invalid size\");\n\t\treturn FALSE;\n\t}",
+    "language": "c",
+    "category": "missing-error-test",
+    "estimatedImpact": 2
+  }
+]
