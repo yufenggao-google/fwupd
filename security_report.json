@@ -1,0 +1,54 @@
+[
+  {
+    "title": "SSL Certificate Verification Disabled",
+    "description": "The upload-smc-license.py script disables SSL certificate verification, making it susceptible to Man-in-the-Middle attacks.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/contrib/upload-smc-license.py#L50",
+    "filePath": "contrib/upload-smc-license.py",
+    "lineNumber": 50,
+    "confidence": 1,
+    "rationale": "The code explicitly sets check_hostname=False and verify_mode=ssl.CERT_NONE, which disables all SSL protections.",
+    "context": "    sslctx = ssl.create_default_context()\\n    sslctx.check_hostname = False\\n    sslctx.verify_mode = ssl.CERT_NONE\\n    url = (\\n        f\"https://{args.hostname}/redfish/v1/Managers/1/LicenseManager/ActivateLicense\"\\n    )",
+    "language": "python",
+    "category": "insecure-config",
+    "estimatedImpact": 1
+  },
+  {
+    "title": "Weak Cryptographic Hash (SHA1) Usage",
+    "description": "The engine uses SHA1 as a fallback checksum type, which is considered cryptographically broken.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/src/fu-engine.c#L801",
+    "filePath": "src/fu-engine.c",
+    "lineNumber": 801,
+    "confidence": 1,
+    "rationale": "G_CHECKSUM_SHA1 is present in the allowed checksum types list.",
+    "context": "gchar *\\nfu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)\\n{\\n\\tGChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};\\n\\n\\tg_return_val_if_fail(FU_IS_ENGINE(self), NULL);\\n\\tg_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);",
+    "language": "c",
+    "category": "other",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Time-of-Check Time-of-Use (TOCTOU) Race Condition",
+    "description": "Checking file existence with g_file_test before usage creates a race condition.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/src/fu-engine.c#L2645",
+    "filePath": "src/fu-engine.c",
+    "lineNumber": 2645,
+    "confidence": 2,
+    "rationale": "The code checks for directory existence before using paths within it, which can change between check and use.",
+    "context": "\\tg_autoptr(GString) new_content = g_string_new(NULL);\\n\\n\\tif (!g_file_test(rundir, G_FILE_TEST_IS_DIR))\\n\\t\\treturn TRUE;\\n\\n\\tif (!g_file_set_contents(reboot_required_path, \"\", -1, error))\\n\\t\\treturn FALSE;",
+    "language": "c",
+    "category": "other",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Weak Cryptographic Hash (MD5) Usage",
+    "description": "The Logitech Scribe plugin uses MD5 for firmware checksums.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/plugins/logitech-scribe/fu-logitech-scribe-device.c#L226",
+    "filePath": "plugins/logitech-scribe/fu-logitech-scribe-device.c",
+    "lineNumber": 226,
+    "confidence": 1,
+    "rationale": "G_CHECKSUM_MD5 is explicitly used for calculating firmware hashes.",
+    "context": "static gchar *\\nfu_logitech_scribe_device_compute_hash(GInputStream *stream, GError **error)\\n{\\n\\tguint8 md5buf[HASH_VALUE_SIZE] = {0};\\n\\tgsize data_len = sizeof(md5buf);\\n\\tg_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_MD5);\\n\\tif (!fu_input_stream_chunkify(stream,\\n\\t\\t\\t\\t      fu_logitech_scribe_device_compute_hash_cb,\\n\\t\\t\\t\\t      checksum,",
+    "language": "c",
+    "category": "other",
+    "estimatedImpact": 3
+  }
+]
