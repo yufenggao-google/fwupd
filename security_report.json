@@ -1,0 +1,41 @@
+[
+  {
+    "title": "Unsafe shell command execution in Qubes wrapper",
+    "description": "Usage of `os.system` invokes a shell and can be dangerous if arguments are dynamic. Even with static arguments, `subprocess` is preferred for better handling.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/contrib/qubes/src/qubes_fwupdmgr.py#L610",
+    "filePath": "contrib/qubes/src/qubes_fwupdmgr.py",
+    "lineNumber": 610,
+    "confidence": 1,
+    "rationale": "Easy to replace `os.system('reboot')` with `subprocess.run(['reboot'], check=True)` which is safer and standard practice.",
+    "context": "                    elif choice == \"Y\" or choice == \"y\":\n                        print(\"Rebooting...\")\n                        os.system(\"reboot\")\n                    else:\n                        raise ValueError()",
+    "language": "python",
+    "category": "other",
+    "estimatedImpact": 3
+  },
+  {
+    "title": "Unsafe command line parsing in CPU device plugin",
+    "description": "The function `g_spawn_command_line_sync` parses the command line string, which can lead to incorrect execution or injection if the path contains spaces or special characters.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/plugins/cpu/fu-cpu-device.c#L373",
+    "filePath": "plugins/cpu/fu-cpu-device.c",
+    "lineNumber": 373,
+    "confidence": 1,
+    "rationale": "Using `g_spawn_sync` with an explicit argument vector avoids shell parsing issues and is robust against paths with spaces.",
+    "context": "\t/* check that userspace has been compiled for CET support */\n\ttoolfn = fu_path_build(FU_PATH_KIND_LIBEXECDIR_PKG, \"fwupd-detect-cet\", NULL);\n\tif (!g_spawn_command_line_sync(toolfn, NULL, NULL, &exit_status, &error_local)) {\n\t\tg_warning(\"failed to test CET: %s\", error_local->message);\n\t\treturn;\n\t}",
+    "language": "c",
+    "category": "other",
+    "estimatedImpact": 2
+  },
+  {
+    "title": "Unsafe command line parsing for macOS version check",
+    "description": "The function `g_spawn_command_line_sync` is used to execute `sw_vers`, which avoids proper argument escaping and path handling found in `g_spawn_sync`.",
+    "deepLink": "https://github.com/yufenggao-google/fwupd/blob/29ee968efb28e04c30dfe6dc5c2c78fae1c552c1/src/fu-engine.c#L1833",
+    "filePath": "src/fu-engine.c",
+    "lineNumber": 1833,
+    "confidence": 1,
+    "rationale": "Replacing with `g_spawn_sync` and an argument array ensures safe execution regardless of the path returned by `g_find_program_in_path`.",
+    "context": "\t/* parse from format:\n\t *    ProductName:    Mac OS X\n\t *    ProductVersion: 10.14.6\n\t *    BuildVersion:   18G103\n\t */\n\tif (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))\n\t\treturn FALSE;\n\tsplit = g_strsplit(stdout, \"\\n\", -1);",
+    "language": "c",
+    "category": "other",
+    "estimatedImpact": 3
+  }
+]
